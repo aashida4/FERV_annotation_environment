@@ -35,10 +35,7 @@ class AnnotationInterface {
             this.downloadResults();
         });
 
-        // ビデオ読み込み完了時
-        document.getElementById('videoPlayer').addEventListener('loadedmetadata', () => {
-            this.setupFaceOverlay();
-        });
+        // ビデオ読み込み完了時（バウンディングボックス機能削除）
 
         // 表情選択時
         document.querySelectorAll('input[name="emotion"]').forEach(radio => {
@@ -113,53 +110,6 @@ class AnnotationInterface {
         videoPlayer.load();
 
         this.updateUI();
-    }
-
-    setupFaceOverlay() {
-        const video = document.getElementById('videoPlayer');
-        const canvas = document.getElementById('faceOverlay');
-        const ctx = canvas.getContext('2d');
-
-        // キャンバスサイズをビデオに合わせる
-        canvas.width = video.videoWidth || video.clientWidth;
-        canvas.height = video.videoHeight || video.clientHeight;
-        canvas.style.width = video.clientWidth + 'px';
-        canvas.style.height = video.clientHeight + 'px';
-
-        // 顔領域のバウンディングボックスを描画（デモ用）
-        this.drawFaceBoundingBox(ctx, canvas.width, canvas.height);
-    }
-
-    drawFaceBoundingBox(ctx, width, height) {
-        // デモ用の顔領域（実際の実装では顔検出APIを使用）
-        const faceX = width * 0.3;
-        const faceY = height * 0.2;
-        const faceWidth = width * 0.4;
-        const faceHeight = height * 0.5;
-
-        ctx.strokeStyle = '#ff0000';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(faceX, faceY, faceWidth, faceHeight);
-
-        // コーナーマーカーを描画
-        const cornerSize = 15;
-        ctx.fillStyle = '#ff0000';
-        
-        // 左上
-        ctx.fillRect(faceX - 2, faceY - 2, cornerSize, 4);
-        ctx.fillRect(faceX - 2, faceY - 2, 4, cornerSize);
-        
-        // 右上
-        ctx.fillRect(faceX + faceWidth - cornerSize + 2, faceY - 2, cornerSize, 4);
-        ctx.fillRect(faceX + faceWidth - 2, faceY - 2, 4, cornerSize);
-        
-        // 左下
-        ctx.fillRect(faceX - 2, faceY + faceHeight - 2, cornerSize, 4);
-        ctx.fillRect(faceX - 2, faceY + faceHeight - cornerSize + 2, 4, cornerSize);
-        
-        // 右下
-        ctx.fillRect(faceX + faceWidth - cornerSize + 2, faceY + faceHeight - 2, cornerSize, 4);
-        ctx.fillRect(faceX + faceWidth - 2, faceY + faceHeight - cornerSize + 2, 4, cornerSize);
     }
 
     saveAnnotation(emotion) {
