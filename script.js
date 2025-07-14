@@ -5,6 +5,9 @@ class AnnotationInterface {
         this.annotations = [];
         this.currentMode = 1; // 1: 新規アノテーション, 2: ラベル付きアノテーション
         this.videoStartTime = null; // 動画開始時刻を記録
+        this.videoLoadTime = null; // 動画読み込み完了時刻を記録
+        this.selectionCount = 0; // 現在の動画での選択変更回数
+        this.isFinished = false; // アノテーション完了フラグ
         this.init();
     }
 
@@ -14,10 +17,11 @@ class AnnotationInterface {
         // data.csvを自動読み込み
         this.loadDataCSV();
         
-        // 初期状態でダウンロードボタンを無効化
+        // 初期状態でダウンロードボタンを無効化・非表示
         const downloadBtn = document.getElementById('downloadBtn');
         downloadBtn.disabled = true;
         downloadBtn.textContent = '結果をダウンロード (0/0)';
+        downloadBtn.style.display = 'none';
     }
 
     bindEvents() {
@@ -42,13 +46,21 @@ class AnnotationInterface {
             videoPlayer.play().catch(e => {
                 console.log('自動再生に失敗しました（ブラウザの制限）:', e);
             });
-            // アノテーション開始時刻を記録
+            // アノテーション開始時刻と読み込み完了時刻を記録
             this.videoStartTime = new Date();
+            this.videoLoadTime = new Date();
         });
 
         // 表情選択時
         document.querySelectorAll('input[name="emotion"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
+                // アノテーション完了後は変更を防ぐ
+                if (this.isFinished) {
+                    e.preventDefault();
+                    e.target.checked = false;
+                    return;
+                }
+                this.selectionCount++; // 選択変更回数をカウント
                 this.saveAnnotation(e.target.value);
                 this.updateUI(); // UI更新を追加
             });
@@ -127,8 +139,10 @@ class AnnotationInterface {
         // 前の選択をクリア
         this.clearEmotionSelection();
 
-        // アノテーション開始時刻をリセット
+        // アノテーション開始時刻と選択回数をリセット
         this.videoStartTime = null;
+        this.videoLoadTime = null;
+        this.selectionCount = 0;
 
         // 保存されたアノテーションがあれば復元
         if (this.annotations[index]) {
@@ -155,7 +169,9 @@ class AnnotationInterface {
                 videoId: this.videoList[this.currentVideoIndex].id,
                 emotion: emotion,
                 timestamp: endTime.toISOString(),
-                annotationTime: annotationTime, // アノテーション時間を追加
+                annotationTime: annotationTime, // アノテーション時間
+                videoLoadTime: this.videoLoadTime ? this.videoLoadTime.toISOString() : null, // 動画読み込み完了時刻
+                selectionCount: this.selectionCount, // 選択変更回数
                 status: 'annotated'
             };
             
@@ -185,13 +201,56 @@ class AnnotationInterface {
     }
 
     nextVideo() {
-        if (this.currentVideoIndex < this.videoList.length - 1) {
-            this.loadVideo(this.currentVideoIndex + 1);
+        // Nextボタンが押された時刻と時間を記録
+        const nextTime = new Date();
+        const nextButtonTime = this.videoStartTime ? 
+            ((nextTime - this.videoStartTime) / 1000).toFixed(2) : null;
+        
+        // 現在のアノテーションにNextボタン情報を追加
+        if (this.annotations[this.currentVideoIndex]) {
+            this.annotations[this.currentVideoIndex].nextButtonTime = nextTime.toISOString();
+            this.annotations[this.currentVideoIndex].timeToNext = nextButtonTime;
         }
+        
+        // 最後の動画の場合はダウンロードボタンを表示
+        const isLastVideo = this.currentVideoIndex >= this.videoList.length - 1;
+        if (isLastVideo) {
+            // アノテーション完了フラグを設定
+            this.isFinished = true;
+            
+            // Nextボタンを非表示にしてダウンロードボタンを表示
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.style.display = 'none';
+            
+            // PASSボタンを無効化
+            const passBtn = document.getElementById('passBtn');
+            passBtn.disabled = true;
+            
+            // 感情選択ボタンを全て無効化
+            document.querySelectorAll('input[name="emotion"]').forEach(radio => {
+                radio.disabled = true;
+            });
+            
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.style.display = 'inline-block';
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = '結果をダウンロード';
+        } else {
+            // 通常の次の動画への移動
+            if (this.currentVideoIndex < this.videoList.length - 1) {
+                this.loadVideo(this.currentVideoIndex + 1);
+            }
+        }
+        
         this.updateUI(); // UI更新を追加
     }
 
     passVideo() {
+        // アノテーション完了後はパス操作を防ぐ
+        if (this.isFinished) {
+            return;
+        }
+        
         // パス処理
         const endTime = new Date();
         const annotationTime = this.videoStartTime ? 
@@ -201,11 +260,13 @@ class AnnotationInterface {
             videoId: this.videoList[this.currentVideoIndex].id,
             emotion: 'pass',
             timestamp: endTime.toISOString(),
-            annotationTime: annotationTime, // アノテーション時間を追加
+            annotationTime: annotationTime, // アノテーション時間
+            videoLoadTime: this.videoLoadTime ? this.videoLoadTime.toISOString() : null, // 動画読み込み完了時刻
+            selectionCount: this.selectionCount, // 選択変更回数（Passの場合は通常0）
             status: 'passed'
         };
 
-        // 次のビデオに進む
+        // 次のビデオに進む（passVideoでは自動的に次に進むのでnextVideoを呼ぶ）
         this.nextVideo();
     }
 
@@ -230,7 +291,14 @@ class AnnotationInterface {
         const hasSelection = currentAnnotation && (currentAnnotation.emotion !== undefined);
         const isLastVideo = this.currentVideoIndex >= this.videoList.length - 1;
         
-        nextBtn.disabled = isLastVideo || !hasSelection;
+        // 最後の動画の場合はFinishボタンに変更
+        if (isLastVideo) {
+            nextBtn.textContent = 'Finish';
+            nextBtn.disabled = !hasSelection;
+        } else {
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = !hasSelection;
+        }
 
         // ダウンロードボタンの制御：全てのアノテーションが完了しているかチェック
         const allAnnotated = this.videoList.length > 0 && this.annotations.every((annotation, index) => 
@@ -242,15 +310,21 @@ class AnnotationInterface {
             annotation && (annotation.status === 'annotated' || annotation.status === 'passed')
         ).length;
         
-        downloadBtn.disabled = !allAnnotated;
+        // 最後の動画でFinishボタンが押されるまでダウンロードボタンを非表示
+        const isLastVideoFinished = isLastVideo && allAnnotated;
+        if (!isLastVideoFinished) {
+            downloadBtn.style.display = 'none';
+        }
         
-        // ダウンロードボタンのテキストを動的に変更
-        if (this.videoList.length === 0) {
-            downloadBtn.textContent = '結果をダウンロード';
-        } else if (allAnnotated) {
-            downloadBtn.textContent = '結果をダウンロード';
-        } else {
-            downloadBtn.textContent = `結果をダウンロード (${completedCount}/${this.videoList.length})`;
+        // ダウンロードボタンのテキストを動的に変更（表示される場合のみ）
+        if (downloadBtn.style.display !== 'none') {
+            if (this.videoList.length === 0) {
+                downloadBtn.textContent = '結果をダウンロード';
+            } else if (allAnnotated) {
+                downloadBtn.textContent = '結果をダウンロード';
+            } else {
+                downloadBtn.textContent = `結果をダウンロード (${completedCount}/${this.videoList.length})`;
+            }
         }
     }
 
@@ -270,16 +344,20 @@ class AnnotationInterface {
             return;
         }
 
-        // CSVフォーマットで結果を作成（アノテーション時間を追加）
-        let csvContent = 'Video ID,File Path,Emotion,Status,Timestamp,Annotation Time (seconds)\n';
+        // CSVフォーマットで結果を作成（新しいフィールドを追加）
+        let csvContent = 'Video ID,File Path,Emotion,Status,Timestamp,Annotation Time (seconds),Video Load Time,Selection Count,Next Button Time,Time to Next (seconds)\n';
         
         this.annotations.forEach((annotation, index) => {
             const video = this.videoList[index];
             if (annotation) {
                 const annotationTime = annotation.annotationTime || '';
-                csvContent += `"${annotation.videoId}","${video.filepath}","${annotation.emotion}","${annotation.status}","${annotation.timestamp}","${annotationTime}"\n`;
+                const videoLoadTime = annotation.videoLoadTime || '';
+                const selectionCount = annotation.selectionCount || 0;
+                const nextButtonTime = annotation.nextButtonTime || '';
+                const timeToNext = annotation.timeToNext || '';
+                csvContent += `"${annotation.videoId}","${video.filepath}","${annotation.emotion}","${annotation.status}","${annotation.timestamp}","${annotationTime}","${videoLoadTime}","${selectionCount}","${nextButtonTime}","${timeToNext}"\n`;
             } else {
-                csvContent += `"${video.id}","${video.filepath}","","not_annotated","",""\n`;
+                csvContent += `"${video.id}","${video.filepath}","","not_annotated","","","","","",""\n`;
             }
         });
 
