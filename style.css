@@ -193,13 +193,8 @@ h1 {
 }
 
 .prev-btn {
-    background: #95a5a6;
-    color: white;
-}
-
-.prev-btn:hover {
-    background: #7f8c8d;
-    transform: translateY(-2px);
+    /* Previous button removed */
+    display: none;
 }
 
 .pass-btn {

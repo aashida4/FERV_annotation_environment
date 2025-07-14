@@ -18,10 +18,6 @@ class AnnotationInterface {
         });
 
         // 操作ボタン
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            this.previousVideo();
-        });
-
         document.getElementById('passBtn').addEventListener('click', () => {
             this.passVideo();
         });
@@ -139,9 +135,8 @@ class AnnotationInterface {
     }
 
     previousVideo() {
-        if (this.currentVideoIndex > 0) {
-            this.loadVideo(this.currentVideoIndex - 1);
-        }
+        // Previous機能は削除されました
+        console.log('Previous機能は利用できません');
     }
 
     nextVideo() {
@@ -167,7 +162,6 @@ class AnnotationInterface {
         // 進捗表示
         const videoCounter = document.getElementById('videoCounter');
         const progressFill = document.getElementById('progressFill');
-        const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
 
         if (this.videoList.length > 0) {
@@ -180,7 +174,6 @@ class AnnotationInterface {
         }
 
         // ボタンの有効/無効
-        prevBtn.disabled = this.currentVideoIndex <= 0;
         nextBtn.disabled = this.currentVideoIndex >= this.videoList.length - 1;
     }
 
@@ -217,9 +210,6 @@ class AnnotationInterface {
     // キーボードショートカット
     handleKeyPress(event) {
         switch(event.key) {
-            case 'ArrowLeft':
-                this.previousVideo();
-                break;
             case 'ArrowRight':
                 this.nextVideo();
                 break;
