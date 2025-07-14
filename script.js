@@ -134,6 +134,9 @@ class AnnotationInterface {
                 timestamp: new Date().toISOString(),
                 status: 'annotated'
             };
+            
+            // アノテーション後にUIを更新
+            this.updateUI();
         }
     }
 
@@ -181,6 +184,7 @@ class AnnotationInterface {
         const videoCounter = document.getElementById('videoCounter');
         const progressFill = document.getElementById('progressFill');
         const nextBtn = document.getElementById('nextBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
 
         if (this.videoList.length > 0) {
             videoCounter.textContent = `${this.currentVideoIndex + 1} / ${this.videoList.length}`;
@@ -191,11 +195,31 @@ class AnnotationInterface {
             progressFill.style.width = '0%';
         }
 
-        // ボタンの有効/無効
-        nextBtn.disabled = this.currentVideoIndex >= this.videoList.length - 1;
+        // NEXTボタンの制御：選択肢が選択されているかチェック
+        const currentAnnotation = this.annotations[this.currentVideoIndex];
+        const hasSelection = currentAnnotation && (currentAnnotation.emotion !== undefined);
+        const isLastVideo = this.currentVideoIndex >= this.videoList.length - 1;
+        
+        nextBtn.disabled = isLastVideo || !hasSelection;
+
+        // ダウンロードボタンの制御：全てのアノテーションが完了しているかチェック
+        const allAnnotated = this.videoList.length > 0 && this.annotations.every((annotation, index) => 
+            annotation && (annotation.status === 'annotated' || annotation.status === 'passed')
+        );
+        downloadBtn.disabled = !allAnnotated;
     }
 
     downloadResults() {
+        // 全てのアノテーションが完了しているかチェック
+        const allAnnotated = this.videoList.length > 0 && this.annotations.every((annotation, index) => 
+            annotation && (annotation.status === 'annotated' || annotation.status === 'passed')
+        );
+        
+        if (!allAnnotated) {
+            alert('全ての動画のアノテーションを完了してください。');
+            return;
+        }
+
         if (this.annotations.length === 0) {
             alert('アノテーションデータがありません。');
             return;

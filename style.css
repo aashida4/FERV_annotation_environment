@@ -245,7 +245,7 @@ h1 {
 
 /* 右側の説明パネル */
 .instructions-panel {
-    width: 400px;
+    width: 600px;
     background: white;
     padding: 30px;
     border-left: 3px solid #3498db;
