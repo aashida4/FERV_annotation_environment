@@ -1,0 +1,6 @@
+ID,FilePath,Description,Label
+video_001,data/sample1.mp4,Sample emotion video 1,happy
+video_002,data/sample2.mp4,Sample emotion video 2,sad
+video_003,data/sample3.mp4,Sample emotion video 3,angry
+video_004,data/sample4.mp4,Sample emotion video 4,neutral
+video_005,data/sample5.mp4,Sample emotion video 5,surprise

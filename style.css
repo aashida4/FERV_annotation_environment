@@ -394,33 +394,42 @@ h1 {
 
 /* モード表示 */
 .current-mode {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     background: #ecf0f1;
     padding: 15px 20px;
     border-radius: 8px;
     margin-bottom: 20px;
+    text-align: center;
 }
 
 #currentModeText {
     font-weight: bold;
     color: #2c3e50;
-    font-size: 16px;
+    font-size: 18px;
 }
 
-.change-mode-btn {
-    background: #95a5a6;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s ease;
+/* データ読み込み状況 */
+.data-status {
+    background: #e8f4fd;
+    border: 2px solid #3498db;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
-.change-mode-btn:hover {
-    background: #7f8c8d;
+#dataStatus {
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.data-status.loaded {
+    background: #e8f5e8;
+    border-color: #27ae60;
+}
+
+.data-status.error {
+    background: #ffebee;
+    border-color: #e74c3c;
 }
 
 /* 既存ラベル表示 */

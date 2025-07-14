@@ -10,19 +10,11 @@ class AnnotationInterface {
     init() {
         this.bindEvents();
         this.updateUI();
+        // data.csvを自動読み込み
+        this.loadDataCSV();
     }
 
     bindEvents() {
-        // モード変更ボタン
-        document.getElementById('changeModeBtn').addEventListener('click', () => {
-            this.showModeSelection();
-        });
-
-        // CSVファイル読み込み
-        document.getElementById('csvFile').addEventListener('change', (e) => {
-            this.loadCSVFile(e.target.files[0]);
-        });
-
         // 操作ボタン
         document.getElementById('passBtn').addEventListener('click', () => {
             this.passVideo();
@@ -47,16 +39,32 @@ class AnnotationInterface {
         });
     }
 
-    async loadCSVFile(file) {
-        if (!file) return;
-
+    async loadDataCSV() {
+        const dataStatus = document.getElementById('dataStatus');
+        
         try {
-            const text = await file.text();
-            this.parseCSV(text);
-            document.getElementById('csvFileName').textContent = file.name;
-            this.loadVideo(0);
+            dataStatus.textContent = 'data.csvを読み込み中...';
+            dataStatus.parentElement.className = 'data-status';
+            
+            const response = await fetch('data.csv');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const csvText = await response.text();
+            this.parseCSV(csvText);
+            
+            dataStatus.textContent = `データ読み込み完了: ${this.videoList.length}件の動画`;
+            dataStatus.parentElement.className = 'data-status loaded';
+            
+            if (this.videoList.length > 0) {
+                this.loadVideo(0);
+            }
+            
         } catch (error) {
-            alert('CSVファイルの読み込みに失敗しました: ' + error.message);
+            console.error('data.csv読み込みエラー:', error);
+            dataStatus.textContent = 'data.csvの読み込みに失敗しました。ファイルが存在するか確認してください。';
+            dataStatus.parentElement.className = 'data-status error';
         }
     }
 
@@ -247,11 +255,6 @@ class AnnotationInterface {
         } else {
             existingLabelSection.style.display = 'none';
         }
-    }
-
-    showModeSelection() {
-        document.getElementById('modeSelection').style.display = 'flex';
-        document.getElementById('mainInterface').style.display = 'none';
     }
 
     setMode(mode) {

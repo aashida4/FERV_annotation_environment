@@ -49,14 +49,11 @@
             <!-- モード表示 -->
             <div class="current-mode">
                 <span id="currentModeText">モード1: 新規アノテーション</span>
-                <button id="changeModeBtn" class="change-mode-btn">モード変更</button>
             </div>
             
-            <!-- ビデオファイル読み込みエリア -->
-            <div class="file-upload-section">
-                <input type="file" id="csvFile" accept=".csv" />
-                <label for="csvFile" class="file-upload-btn">CSVファイルを選択</label>
-                <span id="csvFileName"></span>
+            <!-- データ読み込み状況 -->
+            <div class="data-status">
+                <span id="dataStatus">data.csvを読み込み中...</span>
             </div>
             
             <!-- 進捗表示 -->

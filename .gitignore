@@ -48,8 +48,9 @@ ENV/
 *.webm
 videos/
 
-# Data folder for video files
+# Data folder for video files (but include data.csv)
 data/
+!data.csv
 
 # Backup files
 *.bak
