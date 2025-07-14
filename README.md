@@ -19,6 +19,11 @@ annotation_interface/
 
 ## 機能
 
+### モード選択
+- **モード1: 新規アノテーション** - 動画を見て新しくラベル付けを行います
+- **モード2: ラベル付きアノテーション** - 既存ラベルを確認しながらアノテーションします
+
+### 共通機能
 - **CSVファイルからの動画リスト読み込み**
 - **7つの基本感情のアノテーション**：怒り、嫌悪、恐怖、幸福、悲しみ、驚き、中立
 - **操作ボタン**：Pass、Next（前に戻る機能は削除）
@@ -45,21 +50,34 @@ cd annotation_interface
 動画ファイルのリストをCSVファイルで準備してください。
 
 **CSVファイルの形式例：**
+
+**モード1用（ラベルなし）:**
 ```csv
 ID,FilePath,Description
 video_001,data/sample1.mp4,Sample emotion video 1
 video_002,data/sample2.mp4,Sample emotion video 2
-video_003,data/sample3.mp4,Sample emotion video 3
+```
+
+**モード2用（既存ラベルあり）:**
+```csv
+ID,FilePath,Description,Label
+video_001,data/sample1.mp4,Sample emotion video 1,happy
+video_002,data/sample2.mp4,Sample emotion video 2,sad
+video_003,data/sample3.mp4,Sample emotion video 3,angry
 ```
 
 ### 5. アノテーション作業
-1. `index.html`をWebブラウザで開きます
-2. 「CSVファイルを選択」ボタンから動画リストのCSVファイルを読み込みます
-3. 動画が自動的に読み込まれます
-4. 動画を再生して表情を確認します
-5. 適切な感情を選択します
-6. 「Next」ボタンで次の動画に進みます（前に戻ることはできません）
-7. 判定が困難な場合は「Pass」ボタンを使用します
+1. 起動時にモードを選択します
+   - **モード1**: 新規アノテーション（既存ラベルなし）
+   - **モード2**: ラベル付きアノテーション（既存ラベル表示あり）
+2. `index.html`をWebブラウザで開きます
+3. 「CSVファイルを選択」ボタンから動画リストのCSVファイルを読み込みます
+4. 動画が自動的に読み込まれます
+5. 動画を再生して表情を確認します
+6. モード2の場合、既存ラベルも参考にできます
+7. 適切な感情を選択します
+8. 「Next」ボタンで次の動画に進みます（前に戻ることはできません）
+9. 判定が困難な場合は「Pass」ボタンを使用します
 
 ### 6. キーボードショートカット
 - **右矢印キー**: 次の動画

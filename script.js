@@ -3,6 +3,7 @@ class AnnotationInterface {
         this.videoList = [];
         this.currentVideoIndex = 0;
         this.annotations = [];
+        this.currentMode = 1; // 1: 新規アノテーション, 2: ラベル付きアノテーション
         this.init();
     }
 
@@ -12,6 +13,11 @@ class AnnotationInterface {
     }
 
     bindEvents() {
+        // モード変更ボタン
+        document.getElementById('changeModeBtn').addEventListener('click', () => {
+            this.showModeSelection();
+        });
+
         // CSVファイル読み込み
         document.getElementById('csvFile').addEventListener('change', (e) => {
             this.loadCSVFile(e.target.files[0]);
@@ -62,12 +68,13 @@ class AnnotationInterface {
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (line) {
-                // CSVの形式に応じて調整（例：ID,filepath,description）
+                // CSVの形式に応じて調整（例：ID,filepath,description,label）
                 const columns = line.split(',');
                 this.videoList.push({
                     id: columns[0] || `video_${i}`,
                     filepath: columns[1] || columns[0], // ファイルパスまたは最初の列
-                    description: columns[2] || ''
+                    description: columns[2] || '',
+                    existingLabel: columns[3] || null // 既存ラベル（モード2用）
                 });
             }
         }
@@ -104,6 +111,9 @@ class AnnotationInterface {
         // ビデオを読み込み
         videoSource.src = video.filepath;
         videoPlayer.load();
+
+        // モード2の場合、既存ラベルを表示
+        this.updateExistingLabelDisplay(video);
 
         this.updateUI();
     }
@@ -207,6 +217,59 @@ class AnnotationInterface {
         document.body.removeChild(link);
     }
 
+    updateExistingLabelDisplay(video) {
+        const existingLabelSection = document.getElementById('existingLabelSection');
+        const existingLabelElement = document.getElementById('existingLabel');
+        const labelSourceElement = document.getElementById('labelSource');
+
+        if (this.currentMode === 2) {
+            existingLabelSection.style.display = 'block';
+            
+            if (video.existingLabel && video.existingLabel.trim() !== '') {
+                const emotionMap = {
+                    'angry': '😠 怒り (Angry)',
+                    'disgust': '🤢 嫌悪 (Disgust)',
+                    'fear': '😨 恐怖 (Fear)',
+                    'happy': '😊 幸福 (Happy)',
+                    'sad': '😢 悲しみ (Sad)',
+                    'surprise': '😲 驚き (Surprise)',
+                    'neutral': '😐 中立 (Neutral)'
+                };
+                
+                existingLabelElement.textContent = emotionMap[video.existingLabel] || video.existingLabel;
+                existingLabelElement.className = `label-emotion ${video.existingLabel}`;
+                labelSourceElement.textContent = `(CSVファイルより)`;
+            } else {
+                existingLabelElement.textContent = 'ラベルなし';
+                existingLabelElement.className = 'label-emotion';
+                labelSourceElement.textContent = '';
+            }
+        } else {
+            existingLabelSection.style.display = 'none';
+        }
+    }
+
+    showModeSelection() {
+        document.getElementById('modeSelection').style.display = 'flex';
+        document.getElementById('mainInterface').style.display = 'none';
+    }
+
+    setMode(mode) {
+        this.currentMode = mode;
+        const modeText = document.getElementById('currentModeText');
+        
+        if (mode === 1) {
+            modeText.textContent = 'モード1: 新規アノテーション';
+        } else {
+            modeText.textContent = 'モード2: ラベル付きアノテーション';
+        }
+        
+        // 現在のビデオがあれば既存ラベル表示を更新
+        if (this.videoList.length > 0 && this.currentVideoIndex >= 0) {
+            this.updateExistingLabelDisplay(this.videoList[this.currentVideoIndex]);
+        }
+    }
+
     // キーボードショートカット
     handleKeyPress(event) {
         switch(event.key) {
@@ -242,13 +305,23 @@ class AnnotationInterface {
     }
 }
 
+// グローバル関数（モード選択用）
+function selectMode(mode) {
+    const app = window.annotationApp;
+    app.setMode(mode);
+    
+    // メインインターフェースを表示
+    document.getElementById('modeSelection').style.display = 'none';
+    document.getElementById('mainInterface').style.display = 'block';
+}
+
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new AnnotationInterface();
+    window.annotationApp = new AnnotationInterface();
     
     // キーボードショートカット
     document.addEventListener('keydown', (e) => {
-        app.handleKeyPress(e);
+        window.annotationApp.handleKeyPress(e);
     });
 });
 

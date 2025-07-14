@@ -8,9 +8,49 @@
 </head>
 <body>
     <div class="container">
+        <!-- モード選択画面 -->
+        <div id="modeSelection" class="mode-selection-screen">
+            <div class="mode-selection-content">
+                <h1>表情アノテーションシステム</h1>
+                <h2>モードを選択してください</h2>
+                
+                <div class="mode-options">
+                    <div class="mode-card" data-mode="1">
+                        <div class="mode-icon">✏️</div>
+                        <h3>モード1: 新規アノテーション</h3>
+                        <p>動画を見て表情をラベル付けします</p>
+                        <ul>
+                            <li>新しいアノテーション作成</li>
+                            <li>7つの基本感情から選択</li>
+                            <li>結果をCSVで出力</li>
+                        </ul>
+                        <button class="mode-btn" onclick="selectMode(1)">このモードを選択</button>
+                    </div>
+                    
+                    <div class="mode-card" data-mode="2">
+                        <div class="mode-icon">👁️</div>
+                        <h3>モード2: ラベル付きアノテーション</h3>
+                        <p>既存ラベルを確認しながらアノテーションします</p>
+                        <ul>
+                            <li>既存ラベルの表示</li>
+                            <li>ラベルを参考にしたアノテーション</li>
+                            <li>検証・修正機能</li>
+                        </ul>
+                        <button class="mode-btn" onclick="selectMode(2)">このモードを選択</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- メインコンテンツエリア -->
-        <div class="main-content">
-            <h1>表情アノテーションシステム</h1>
+        <div id="mainInterface" class="main-content" style="display: none;">
+            <h1 id="systemTitle">表情アノテーションシステム</h1>
+            
+            <!-- モード表示 -->
+            <div class="current-mode">
+                <span id="currentModeText">モード1: 新規アノテーション</span>
+                <button id="changeModeBtn" class="change-mode-btn">モード変更</button>
+            </div>
             
             <!-- ビデオファイル読み込みエリア -->
             <div class="file-upload-section">
@@ -37,6 +77,15 @@
             
             <!-- 表情選択エリア -->
             <div class="emotion-selection">
+                <!-- モード2用：既存ラベル表示 -->
+                <div id="existingLabelSection" class="existing-label-display" style="display: none;">
+                    <h3>既存ラベル：</h3>
+                    <div class="existing-label">
+                        <span class="label-emotion" id="existingLabel">ラベルなし</span>
+                        <span class="label-source" id="labelSource"></span>
+                    </div>
+                </div>
+                
                 <h3>表情を選択してください：</h3>
                 <div class="emotion-grid">
                     <label class="emotion-option">
