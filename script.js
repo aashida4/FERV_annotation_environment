@@ -12,6 +12,11 @@ class AnnotationInterface {
         this.updateUI();
         // data.csvを自動読み込み
         this.loadDataCSV();
+        
+        // 初期状態でダウンロードボタンを無効化
+        const downloadBtn = document.getElementById('downloadBtn');
+        downloadBtn.disabled = true;
+        downloadBtn.textContent = '結果をダウンロード (0/0)';
     }
 
     bindEvents() {
@@ -35,6 +40,7 @@ class AnnotationInterface {
         document.querySelectorAll('input[name="emotion"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 this.saveAnnotation(e.target.value);
+                this.updateUI(); // UI更新を追加
             });
         });
     }
@@ -164,6 +170,7 @@ class AnnotationInterface {
         if (this.currentVideoIndex < this.videoList.length - 1) {
             this.loadVideo(this.currentVideoIndex + 1);
         }
+        this.updateUI(); // UI更新を追加
     }
 
     passVideo() {
@@ -206,7 +213,22 @@ class AnnotationInterface {
         const allAnnotated = this.videoList.length > 0 && this.annotations.every((annotation, index) => 
             annotation && (annotation.status === 'annotated' || annotation.status === 'passed')
         );
+        
+        // アノテーション完了数の計算
+        const completedCount = this.annotations.filter(annotation => 
+            annotation && (annotation.status === 'annotated' || annotation.status === 'passed')
+        ).length;
+        
         downloadBtn.disabled = !allAnnotated;
+        
+        // ダウンロードボタンのテキストを動的に変更
+        if (this.videoList.length === 0) {
+            downloadBtn.textContent = '結果をダウンロード';
+        } else if (allAnnotated) {
+            downloadBtn.textContent = '結果をダウンロード';
+        } else {
+            downloadBtn.textContent = `結果をダウンロード (${completedCount}/${this.videoList.length})`;
+        }
     }
 
     downloadResults() {

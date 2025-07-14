@@ -239,8 +239,14 @@ h1 {
     transition: background 0.3s ease;
 }
 
-.download-btn:hover {
+.download-btn:hover:not(:disabled) {
     background: #7d3c98;
+}
+
+.download-btn:disabled {
+    background: #bdc3c7;
+    color: #7f8c8d;
+    cursor: not-allowed;
 }
 
 /* 右側の説明パネル */
