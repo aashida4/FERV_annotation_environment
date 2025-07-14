@@ -4,6 +4,7 @@ class AnnotationInterface {
         this.currentVideoIndex = 0;
         this.annotations = [];
         this.currentMode = 1; // 1: 新規アノテーション, 2: ラベル付きアノテーション
+        this.videoStartTime = null; // 動画開始時刻を記録
         this.init();
     }
 
@@ -34,7 +35,16 @@ class AnnotationInterface {
             this.downloadResults();
         });
 
-        // ビデオ読み込み完了時（バウンディングボックス機能削除）
+        // ビデオ読み込み完了時の自動再生
+        const videoPlayer = document.getElementById('videoPlayer');
+        videoPlayer.addEventListener('loadeddata', () => {
+            // 動画データが読み込まれたら自動再生
+            videoPlayer.play().catch(e => {
+                console.log('自動再生に失敗しました（ブラウザの制限）:', e);
+            });
+            // アノテーション開始時刻を記録
+            this.videoStartTime = new Date();
+        });
 
         // 表情選択時
         document.querySelectorAll('input[name="emotion"]').forEach(radio => {
@@ -117,6 +127,9 @@ class AnnotationInterface {
         // 前の選択をクリア
         this.clearEmotionSelection();
 
+        // アノテーション開始時刻をリセット
+        this.videoStartTime = null;
+
         // 保存されたアノテーションがあれば復元
         if (this.annotations[index]) {
             this.restoreAnnotation(this.annotations[index]);
@@ -134,10 +147,15 @@ class AnnotationInterface {
 
     saveAnnotation(emotion) {
         if (this.currentVideoIndex >= 0 && this.currentVideoIndex < this.videoList.length) {
+            const endTime = new Date();
+            const annotationTime = this.videoStartTime ? 
+                ((endTime - this.videoStartTime) / 1000).toFixed(2) : null; // 秒単位
+            
             this.annotations[this.currentVideoIndex] = {
                 videoId: this.videoList[this.currentVideoIndex].id,
                 emotion: emotion,
-                timestamp: new Date().toISOString(),
+                timestamp: endTime.toISOString(),
+                annotationTime: annotationTime, // アノテーション時間を追加
                 status: 'annotated'
             };
             
@@ -175,10 +193,15 @@ class AnnotationInterface {
 
     passVideo() {
         // パス処理
+        const endTime = new Date();
+        const annotationTime = this.videoStartTime ? 
+            ((endTime - this.videoStartTime) / 1000).toFixed(2) : null; // 秒単位
+        
         this.annotations[this.currentVideoIndex] = {
             videoId: this.videoList[this.currentVideoIndex].id,
             emotion: 'pass',
-            timestamp: new Date().toISOString(),
+            timestamp: endTime.toISOString(),
+            annotationTime: annotationTime, // アノテーション時間を追加
             status: 'passed'
         };
 
@@ -247,15 +270,16 @@ class AnnotationInterface {
             return;
         }
 
-        // CSVフォーマットで結果を作成
-        let csvContent = 'Video ID,File Path,Emotion,Status,Timestamp\n';
+        // CSVフォーマットで結果を作成（アノテーション時間を追加）
+        let csvContent = 'Video ID,File Path,Emotion,Status,Timestamp,Annotation Time (seconds)\n';
         
         this.annotations.forEach((annotation, index) => {
             const video = this.videoList[index];
             if (annotation) {
-                csvContent += `"${annotation.videoId}","${video.filepath}","${annotation.emotion}","${annotation.status}","${annotation.timestamp}"\n`;
+                const annotationTime = annotation.annotationTime || '';
+                csvContent += `"${annotation.videoId}","${video.filepath}","${annotation.emotion}","${annotation.status}","${annotation.timestamp}","${annotationTime}"\n`;
             } else {
-                csvContent += `"${video.id}","${video.filepath}","","not_annotated",""\n`;
+                csvContent += `"${video.id}","${video.filepath}","","not_annotated","",""\n`;
             }
         });
 
