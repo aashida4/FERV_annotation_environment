@@ -26,10 +26,6 @@ class AnnotationInterface {
 
     bindEvents() {
         // 操作ボタン
-        document.getElementById('passBtn').addEventListener('click', () => {
-            this.passVideo();
-        });
-
         document.getElementById('nextBtn').addEventListener('click', () => {
             this.nextVideo();
         });
@@ -222,10 +218,6 @@ class AnnotationInterface {
             const nextBtn = document.getElementById('nextBtn');
             nextBtn.style.display = 'none';
             
-            // PASSボタンを無効化
-            const passBtn = document.getElementById('passBtn');
-            passBtn.disabled = true;
-            
             // 感情選択ボタンを全て無効化
             document.querySelectorAll('input[name="emotion"]').forEach(radio => {
                 radio.disabled = true;
@@ -243,31 +235,6 @@ class AnnotationInterface {
         }
         
         this.updateUI(); // UI更新を追加
-    }
-
-    passVideo() {
-        // アノテーション完了後はパス操作を防ぐ
-        if (this.isFinished) {
-            return;
-        }
-        
-        // パス処理
-        const endTime = new Date();
-        const annotationTime = this.videoStartTime ? 
-            ((endTime - this.videoStartTime) / 1000).toFixed(2) : null; // 秒単位
-        
-        this.annotations[this.currentVideoIndex] = {
-            videoId: this.videoList[this.currentVideoIndex].id,
-            emotion: 'pass',
-            timestamp: endTime.toISOString(),
-            annotationTime: annotationTime, // アノテーション時間
-            videoLoadTime: this.videoLoadTime ? this.videoLoadTime.toISOString() : null, // 動画読み込み完了時刻
-            selectionCount: this.selectionCount, // 選択変更回数（Passの場合は通常0）
-            status: 'passed'
-        };
-
-        // 次のビデオに進む（passVideoでは自動的に次に進むのでnextVideoを呼ぶ）
-        this.nextVideo();
     }
 
     updateUI() {
@@ -302,12 +269,12 @@ class AnnotationInterface {
 
         // ダウンロードボタンの制御：全てのアノテーションが完了しているかチェック
         const allAnnotated = this.videoList.length > 0 && this.annotations.every((annotation, index) => 
-            annotation && (annotation.status === 'annotated' || annotation.status === 'passed')
+            annotation && annotation.status === 'annotated'
         );
         
         // アノテーション完了数の計算
         const completedCount = this.annotations.filter(annotation => 
-            annotation && (annotation.status === 'annotated' || annotation.status === 'passed')
+            annotation && annotation.status === 'annotated'
         ).length;
         
         // 最後の動画でFinishボタンが押されるまでダウンロードボタンを非表示
@@ -331,7 +298,7 @@ class AnnotationInterface {
     downloadResults() {
         // 全てのアノテーションが完了しているかチェック
         const allAnnotated = this.videoList.length > 0 && this.annotations.every((annotation, index) => 
-            annotation && (annotation.status === 'annotated' || annotation.status === 'passed')
+            annotation && annotation.status === 'annotated'
         );
         
         if (!allAnnotated) {
@@ -426,10 +393,6 @@ class AnnotationInterface {
         switch(event.key) {
             case 'ArrowRight':
                 this.nextVideo();
-                break;
-            case ' ':
-                event.preventDefault();
-                this.passVideo();
                 break;
             case '1':
                 document.querySelector('input[value="angry"]').click();

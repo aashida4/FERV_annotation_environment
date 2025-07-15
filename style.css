@@ -210,16 +210,6 @@ h1 {
     display: none;
 }
 
-.pass-btn {
-    background: #f39c12;
-    color: white;
-}
-
-.pass-btn:hover:not(:disabled) {
-    background: #e67e22;
-    transform: translateY(-2px);
-}
-
 .next-btn {
     background: #27ae60;
     color: white;
