@@ -168,6 +168,7 @@ class AnnotationInterface {
                 annotationTime: annotationTime, // アノテーション時間
                 videoLoadTime: this.videoLoadTime ? this.videoLoadTime.toISOString() : null, // 動画読み込み完了時刻
                 selectionCount: this.selectionCount, // 選択変更回数
+                annotationMode: this.currentMode, // アノテーションモード
                 status: 'annotated'
             };
             
@@ -312,7 +313,7 @@ class AnnotationInterface {
         }
 
         // CSVフォーマットで結果を作成（新しいフィールドを追加）
-        let csvContent = 'Video ID,File Path,Emotion,Status,Timestamp,Annotation Time (seconds),Video Load Time,Selection Count,Next Button Time,Time to Next (seconds)\n';
+        let csvContent = 'Video ID,File Path,Emotion,Status,Timestamp,Annotation Time (seconds),Video Load Time,Selection Count,Next Button Time,Time to Next (seconds),Annotation Mode\n';
         
         this.annotations.forEach((annotation, index) => {
             const video = this.videoList[index];
@@ -322,9 +323,10 @@ class AnnotationInterface {
                 const selectionCount = annotation.selectionCount || 0;
                 const nextButtonTime = annotation.nextButtonTime || '';
                 const timeToNext = annotation.timeToNext || '';
-                csvContent += `"${annotation.videoId}","${video.filepath}","${annotation.emotion}","${annotation.status}","${annotation.timestamp}","${annotationTime}","${videoLoadTime}","${selectionCount}","${nextButtonTime}","${timeToNext}"\n`;
+                const annotationMode = `Mode ${annotation.annotationMode || 1}`;
+                csvContent += `"${annotation.videoId}","${video.filepath}","${annotation.emotion}","${annotation.status}","${annotation.timestamp}","${annotationTime}","${videoLoadTime}","${selectionCount}","${nextButtonTime}","${timeToNext}","${annotationMode}"\n`;
             } else {
-                csvContent += `"${video.id}","${video.filepath}","","not_annotated","","","","","",""\n`;
+                csvContent += `"${video.id}","${video.filepath}","","not_annotated","","","","","","",""\n`;
             }
         });
 
