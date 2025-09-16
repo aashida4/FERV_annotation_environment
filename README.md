@@ -9,8 +9,10 @@ annotation_interface/
 ├── index.html              # メインのアノテーションインターフェース
 ├── style.css               # スタイルシート
 ├── script.js               # JavaScript機能実装
-├── data.csv                # 動画リストファイル（固定）
-├── data_test.csv           # テスト用動画リスト
+├── data_mode1.csv          # モード1用: ラベル無し動画リスト
+├── data_mode2.csv          # モード2用: ラベル付き動画リスト
+├── data_test.csv           # テスト用動画リスト（任意）
+├── generate_csv.py         # 2種類のCSV自動生成スクリプト
 ├── data/                   # 動画ファイル格納フォルダ（Git管理外）
 ├── README.md               # このファイル
 ├── .gitignore              # Git除外設定
@@ -20,11 +22,11 @@ annotation_interface/
 ## 機能
 
 ### モード選択
-- **モード1: 新規アノテーション** - 動画を見て新しくラベル付けを行います
-- **モード2: ラベル付きアノテーション** - 既存ラベル（前のアノテータの回答）を確認しながらアノテーションします
+- **モード1: 新規アノテーション** - 既存ラベル情報を一切読み込まない（`data_mode1.csv`）
+- **モード2: ラベル付きアノテーション** - 既存ラベル（前のアノテータの回答）を表示（`data_mode2.csv`）
 
 ### 主要機能
-- **固定CSVファイル読み込み** - `data.csv`を自動読み込み（ファイル選択不要）
+- **モード別CSV自動読み込み** - モード1は`data_mode1.csv`、モード2は`data_mode2.csv`を自動読み込み
 - **7つの基本感情のアノテーション**：怒り、嫌悪、恐怖、幸福、悲しみ、驚き、中立
 - **前進のみワークフロー** - 戻る機能なし、確実な作業進行
 - **動画自動再生** - ページ読み込み後に自動で動画再生
@@ -53,31 +55,38 @@ cd annotation_interface
 ```
 
 ### 2. データファイルの準備
-アノテーション対象の動画ファイルを`data/`フォルダに配置し、`data.csv`ファイルを編集してください。
+`data/` フォルダに動画を以下のような構造で配置してください：
 
-**data.csvの形式：**
-
-**モード1用（ラベルなし）:**
-```csv
-ID,FilePath,Description
-video_001,data/sample1.mp4,Sample emotion video 1
-video_002,data/sample2.mp4,Sample emotion video 2
+```
+data/
+  CategoryA/
+    angry/xxx.mp4
+    happy/yyy.mp4
+  CategoryB/
+    sad/zzz.mp4
+  ...
 ```
 
-**モード2用（既存ラベルあり）:**
-```csv
-ID,FilePath,Description,Label
-video_001,data/sample1.mp4,Sample emotion video 1,happy
-video_002,data/sample2.mp4,Sample emotion video 2,sad
-video_003,data/sample3.mp4,Sample emotion video 3,angry
+その後、以下のコマンドで2種類のCSVを自動生成できます：
+
+```bash
+python generate_csv.py
 ```
+
+生成されるファイル：
+```
+data_mode1.csv   # ID,FilePath,Description
+data_mode2.csv   # ID,FilePath,Description,Label
+```
+
+ラベルはディレクトリ名（感情フォルダ名）が自動的に`Label`列に入ります。手動編集も可能です。
 
 ### 3. アノテーション作業
-1. **モード選択**：起動時にモードを選択（**一度選択すると変更不可**）
-   - **モード1**: 新規アノテーション（既存ラベルなし）
-   - **モード2**: ラベル付きアノテーション（前のアノテータの回答表示）
-2. `index.html`をWebブラウザで開く
-3. `data.csv`が自動的に読み込まれる
+1. `index.html`をWebブラウザで開く
+2. **モード選択**（一度選択すると変更不可）
+  - モード1: `data_mode1.csv`を読み込み（ラベル非表示）
+  - モード2: `data_mode2.csv`を読み込み（既存ラベル表示）
+3. 該当するCSVが自動で読み込まれる
 4. 動画が自動的に読み込まれ、自動再生される
 5. モード2の場合、「あなたの前のアノテータの回答」が表示される
 6. 適切な感情を選択（**必須** - Passボタンは削除済み）
@@ -119,8 +128,8 @@ video_003,data/sample3.mp4,Sample emotion video 3,angry
 
 ### サンプル出力
 ```csv
-Video ID,File Path,Emotion,Status,Timestamp,Annotation Time (seconds),Video Load Time,Selection Count,Next Button Time,Time to Next (seconds)
-"video_001","data/Action/angry/0022.mp4","angry","annotated","2025-07-15T10:30:45.123Z","3.45","2025-07-15T10:30:41.678Z","2","2025-07-15T10:30:50.234Z","5.11"
+Video ID,File Path,Emotion,Status,Timestamp,Annotation Time (seconds),Video Load Time,Selection Count,Next Button Time,Time to Next (seconds),Annotation Mode
+"video_001","data/Action/angry/0022.mp4","angry","annotated","2025-07-15T10:30:45.123Z","3.45","2025-07-15T10:30:41.678Z","2","2025-07-15T10:30:50.234Z","5.11","Mode 1"
 ```
 
 ## テストデータ機能
@@ -158,7 +167,7 @@ mv data_backup.csv data.csv
 
 2. **モード変更**: 一度モードを選択すると、アプリケーションを再起動するまで変更できません。
 
-3. **データファイル**: `data.csv`ファイルは固定で自動読み込みされます。
+3. **データファイル**: モード1は `data_mode1.csv`、モード2は `data_mode2.csv` を自動読み込みします（`generate_csv.py`で生成）。
 
 4. **前に戻る機能**: 一度次に進むと前の動画には戻れません。慎重にアノテーションを行ってください。
 
@@ -227,6 +236,8 @@ npx http-server
 - ✅ Finishボタンと完了時UI制御
 - ✅ 自動動画再生
 - ✅ 前進のみワークフロー
+- ✅ モード別CSV切替（`data_mode1.csv` / `data_mode2.csv`）
+- ✅ 既存ラベル表示（モード2のみ）
 
 ### Gitワークフロー
 ```bash
