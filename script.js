@@ -14,8 +14,7 @@ class AnnotationInterface {
     init() {
         this.bindEvents();
         this.updateUI();
-        // data.csvを自動読み込み
-        this.loadDataCSV();
+    // 初期起動ではCSVを読み込まない（モード選択後に読み込む）
         
         // 初期状態でダウンロードボタンを無効化・非表示
         const downloadBtn = document.getElementById('downloadBtn');
@@ -63,14 +62,14 @@ class AnnotationInterface {
         });
     }
 
-    async loadDataCSV() {
+    async loadDataCSV(filename = 'data.csv') {
         const dataStatus = document.getElementById('dataStatus');
         
         try {
-            dataStatus.textContent = 'data.csvを読み込み中...';
+            dataStatus.textContent = `${filename} を読み込み中...`;
             dataStatus.parentElement.className = 'data-status';
             
-            const response = await fetch('data.csv');
+            const response = await fetch(filename);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -78,7 +77,7 @@ class AnnotationInterface {
             const csvText = await response.text();
             this.parseCSV(csvText);
             
-            dataStatus.textContent = `データ読み込み完了: ${this.videoList.length}件の動画`;
+            dataStatus.textContent = `読込完了 (${filename}): ${this.videoList.length}件`;
             dataStatus.parentElement.className = 'data-status loaded';
             
             if (this.videoList.length > 0) {
@@ -87,7 +86,7 @@ class AnnotationInterface {
             
         } catch (error) {
             console.error('data.csv読み込みエラー:', error);
-            dataStatus.textContent = 'data.csvの読み込みに失敗しました。ファイルが存在するか確認してください。';
+            dataStatus.textContent = `${filename} の読み込みに失敗しました。ファイルの存在を確認してください。`;
             dataStatus.parentElement.className = 'data-status error';
         }
     }
@@ -425,7 +424,11 @@ class AnnotationInterface {
 function selectMode(mode) {
     const app = window.annotationApp;
     app.setMode(mode);
-    
+
+    // モードに応じたCSVファイルを決定
+    const filename = (mode === 1) ? 'data_mode1.csv' : 'data_mode2.csv';
+    app.loadDataCSV(filename);
+
     // メインインターフェースを表示
     document.getElementById('modeSelection').style.display = 'none';
     document.getElementById('mainInterface').style.display = 'block';
