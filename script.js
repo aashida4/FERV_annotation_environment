@@ -426,7 +426,7 @@ function selectMode(mode) {
     app.setMode(mode);
 
     // モードに応じたCSVファイルを決定
-    const filename = (mode === 1) ? 'data_mode1.csv' : 'data_mode2.csv';
+    const filename = (mode === 1) ? 'no_label.csv' : 'with_label.csv';
     app.loadDataCSV(filename);
 
     // メインインターフェースを表示
