@@ -48,6 +48,23 @@ annotation_interface/
 
 ## クイックスタート
 
+### (ブランチ feature/browser-filereader 専用) ブラウザ単体モードについて
+このブランチではサーバーを起動せず、ローカルで `index.html` を直接開き、モード選択後にCSVファイルを手動で読み込む FileReader 方式に変更されています。
+
+手順概要:
+1. `index.html` をダブルクリックで開く（Chrome / Firefox 推奨）
+2. モードを選択
+3. 画面上部の CSV 選択入力で該当形式のCSVを指定
+  - モード1: `ID,FilePath,Description`
+  - モード2: `ID,FilePath,Description,Label`
+4. 「CSV読み込み開始」を押すと動画リストがロードされアノテーション開始
+
+注意:
+- ネットワークアクセス不要（完全オフライン可）
+- ブラウザのセキュリティ仕様により、一部環境で動画パスが `file://` の相対解決に失敗する場合があります。その場合は従来通り簡易HTTPサーバー利用に戻してください（例: `python -m http.server`）。
+- 既存の自動CSV読み込み機能は無効化されています。
+
+
 ### 1. プロジェクトのクローン（Git使用時）
 ```bash
 git clone <repository-url>

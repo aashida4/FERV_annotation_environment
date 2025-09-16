@@ -39,6 +39,15 @@
                 <span id="currentModeText">モード1: 新規アノテーション</span>
             </div>
             
+            <!-- ローカルCSV読み込み（ブラウザのみ運用モード） -->
+            <div id="localCsvLoader" class="local-csv-loader" style="margin: 12px 0;">
+                <div style="font-weight: 600;">CSVファイルを選択してください (<span id="expectedCsvFormat">Mode1: ID,FilePath,Description</span>)</div>
+                <input type="file" id="csvFileInput" accept=".csv" />
+                <button id="startFromCsvBtn" disabled style="margin-left:8px;">CSV読み込み開始</button>
+                <div id="csvLoadMessage" style="font-size: 0.85em; color:#666; margin-top:4px;">モード選択後に該当形式のCSVを選び、読み込み開始を押してください。</div>
+            </div>
+            <hr style="margin: 10px 0;" />
+            
             <!-- データ読み込み状況 -->
             <div class="data-status">
                 <span id="dataStatus">data.csvを読み込み中...</span>

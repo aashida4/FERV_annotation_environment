@@ -62,33 +62,37 @@ class AnnotationInterface {
         });
     }
 
-    async loadDataCSV(filename = 'data.csv') {
+    // ローカルファイルCSV読み込み（FileReader利用）
+    loadLocalCSV(file) {
         const dataStatus = document.getElementById('dataStatus');
-        
-        try {
-            dataStatus.textContent = `${filename} を読み込み中...`;
-            dataStatus.parentElement.className = 'data-status';
-            
-            const response = await fetch(filename);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const csvText = await response.text();
-            this.parseCSV(csvText);
-            
-            dataStatus.textContent = `読込完了 (${filename}): ${this.videoList.length}件`;
-            dataStatus.parentElement.className = 'data-status loaded';
-            
-            if (this.videoList.length > 0) {
-                this.loadVideo(0);
-            }
-            
-        } catch (error) {
-            console.error('data.csv読み込みエラー:', error);
-            dataStatus.textContent = `${filename} の読み込みに失敗しました。ファイルの存在を確認してください。`;
+        if (!file) {
+            dataStatus.textContent = 'CSVファイルが選択されていません。';
             dataStatus.parentElement.className = 'data-status error';
+            return;
         }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target.result;
+                this.parseCSV(text);
+                dataStatus.textContent = `読込完了 (ローカル): ${this.videoList.length}件`;
+                dataStatus.parentElement.className = 'data-status loaded';
+                if (this.videoList.length > 0) {
+                    this.loadVideo(0);
+                }
+            } catch (err) {
+                console.error('CSV解析エラー', err);
+                dataStatus.textContent = 'CSV解析に失敗しました。形式を確認してください。';
+                dataStatus.parentElement.className = 'data-status error';
+            }
+        };
+        reader.onerror = () => {
+            dataStatus.textContent = 'CSVファイル読み込みエラー。';
+            dataStatus.parentElement.className = 'data-status error';
+        };
+        dataStatus.textContent = 'ローカルCSVを読み込み中...';
+        dataStatus.parentElement.className = 'data-status';
+        reader.readAsText(file, 'utf-8');
     }
 
     parseCSV(csvText) {
@@ -425,13 +429,32 @@ function selectMode(mode) {
     const app = window.annotationApp;
     app.setMode(mode);
 
-    // モードに応じたCSVファイルを決定
-    const filename = (mode === 1) ? 'no_label.csv' : 'with_label.csv';
-    app.loadDataCSV(filename);
+    // 期待フォーマット表示更新
+    const expected = document.getElementById('expectedCsvFormat');
+    if (mode === 1) {
+        expected.textContent = 'Mode1: ID,FilePath,Description';
+    } else {
+        expected.textContent = 'Mode2: ID,FilePath,Description,Label';
+    }
 
-    // メインインターフェースを表示
+    // メインインターフェース表示 & ローカルCSVロードUI有効化
     document.getElementById('modeSelection').style.display = 'none';
     document.getElementById('mainInterface').style.display = 'block';
+    const csvInput = document.getElementById('csvFileInput');
+    const startBtn = document.getElementById('startFromCsvBtn');
+    const dataStatus = document.getElementById('dataStatus');
+    dataStatus.textContent = 'CSVファイルを選択し「CSV読み込み開始」を押してください。';
+    dataStatus.parentElement.className = 'data-status';
+
+    csvInput.addEventListener('change', () => {
+        startBtn.disabled = !csvInput.files || csvInput.files.length === 0;
+    });
+    startBtn.addEventListener('click', () => {
+        if (!csvInput.files || csvInput.files.length === 0) return;
+        const file = csvInput.files[0];
+        app.loadLocalCSV(file);
+        startBtn.disabled = true; // 再読み込み時は再度選択を要求
+    }, { once: true });
 }
 
 // アプリケーション初期化
