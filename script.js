@@ -72,7 +72,7 @@ class AnnotationInterface {
             dataStatus.textContent = 'data.csvを読み込み中...';
             dataStatus.parentElement.className = 'data-status';
             
-            const response = await fetch('mode_test.csv');
+            const response = await fetch('data.csv');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
