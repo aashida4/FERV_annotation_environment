@@ -8,6 +8,8 @@ class AnnotationInterface {
         this.videoLoadTime = null; // 動画読み込み完了時刻を記録
         this.selectionCount = 0; // 現在の動画での選択変更回数
         this.isFinished = false; // アノテーション完了フラグ
+        this.modeSelected = false; // モード選択済みフラグ
+        this.hasLoadedFirstVideo = false; // 初回動画読み込み済みフラグ
         this.init();
     }
 
@@ -70,7 +72,7 @@ class AnnotationInterface {
             dataStatus.textContent = 'data.csvを読み込み中...';
             dataStatus.parentElement.className = 'data-status';
             
-            const response = await fetch('data.csv');
+            const response = await fetch('mode_test.csv');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -81,9 +83,7 @@ class AnnotationInterface {
             dataStatus.textContent = `データ読み込み完了: ${this.videoList.length}件の動画`;
             dataStatus.parentElement.className = 'data-status loaded';
             
-            if (this.videoList.length > 0) {
-                this.loadVideo(0);
-            }
+            this.ensureFirstVideoLoaded();
             
         } catch (error) {
             console.error('data.csv読み込みエラー:', error);
@@ -122,6 +122,13 @@ class AnnotationInterface {
         this.annotations = new Array(this.videoList.length).fill(null);
         this.currentVideoIndex = 0;
         this.updateUI();
+    }
+
+    ensureFirstVideoLoaded() {
+        if (!this.hasLoadedFirstVideo && this.modeSelected && this.videoList.length > 0) {
+            this.loadVideo(0);
+            this.hasLoadedFirstVideo = true;
+        }
     }
 
     loadVideo(index) {
@@ -376,6 +383,7 @@ class AnnotationInterface {
 
     setMode(mode) {
         this.currentMode = mode;
+        this.modeSelected = true;
         const modeText = document.getElementById('currentModeText');
         
         if (mode === 1) {
@@ -384,6 +392,8 @@ class AnnotationInterface {
             modeText.textContent = 'モード2: ラベル付きアノテーション';
         }
         
+        this.ensureFirstVideoLoaded();
+
         // 現在のビデオがあれば既存ラベル表示を更新
         if (this.videoList.length > 0 && this.currentVideoIndex >= 0) {
             this.updateExistingLabelDisplay(this.videoList[this.currentVideoIndex]);
